@@ -2,8 +2,6 @@
 
 namespace App\Filament\Resources;
 
-use App\Models\ExpensesCategorie;
-use App\Models\Supplier;
 use Filament\Forms;
 use App\Models\Bill;
 use App\Models\Unit;
@@ -15,11 +13,13 @@ use App\Models\Manager;
 use App\Models\Routing;
 use App\Models\Vehicle;
 use App\Models\Consumer;
+use App\Models\Supplier;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use App\Models\ObjectNature;
 use App\Models\Conditionning;
 use Filament\Resources\Resource;
+use App\Models\ExpensesCategorie;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
@@ -27,6 +27,7 @@ use Filament\Forms\Components\Wizard;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Forms\Components\DatePicker;
 use Guava\FilamentClusters\Forms\Cluster;
 use Illuminate\Database\Eloquent\Builder;
@@ -35,6 +36,7 @@ use Filament\Forms\Components\DateTimePicker;
 use App\Filament\Resources\VoyageResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\VoyageResource\RelationManagers;
+
 
 class VoyageResource extends Resource
 {
@@ -46,6 +48,8 @@ class VoyageResource extends Resource
     {
         return $form
             ->schema([
+                
+                
                 Section::make("")
                     ->schema([
 
@@ -53,7 +57,6 @@ class VoyageResource extends Resource
                             Wizard\Step::make('ligne_voyage')
                                 ->label(__("Ligne de voyage"))
                                 ->schema([
-
 
                                     Grid::make(2)
                                         ->schema([
@@ -111,6 +114,7 @@ class VoyageResource extends Resource
                                 ->label(__("Factures"))
                                 ->schema([
                                     Repeater::make("bills")
+                                    
                                         ->relationship("bills")
                                         ->addActionLabel(__("Ajouter une facture"))
                                         ->reorderable(false)
@@ -160,6 +164,7 @@ class VoyageResource extends Resource
                                                         ->schema([
 
                                                             Repeater::make("objects")
+                                                            ->label(__("objets de la facture"))
                                                                 ->defaultItems(0)
                                                                 ->addActionLabel(__("Ajouter un objet  à la facture"))
                                                                 ->grid(2)
@@ -209,7 +214,7 @@ class VoyageResource extends Resource
 
 
                                                                         ]),
-                                                                    TextInput::make("total")
+                                                                    TextInput::make("sous_total")
                                                                         ->label(__("Prix total"))
                                                                         ->numeric(),
                                                                 ]),
@@ -217,6 +222,7 @@ class VoyageResource extends Resource
 
                                                         TextInput::make("total")
                                                         ->label(__("Total")),
+
                                                     TextInput::make("observations")
                                                         ->label(__("Observations ")),
 
