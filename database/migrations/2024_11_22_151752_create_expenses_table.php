@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('expenses', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger("bill_id")->constrained(table: "bills");
+            $table->unsignedBigInteger("voyage_id")->constrained(table: "bills");
             $table->date("date");
             $table->unsignedBigInteger("expense_category_id")->constrained("expenses_categories");
             $table->unsignedBigInteger("supplier_id")->constrained("suppliers");

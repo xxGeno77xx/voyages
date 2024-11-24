@@ -22,7 +22,8 @@ class DatabaseSeeder extends Seeder
             ObjectNatureSeeder::class,
             ConditionningSeeder::class,
             UnitsSeeder::class,
-            SuppliersSeeder::class
+            SuppliersSeeder::class,
+            ExpensesCategoriesSeeder::class
         ]);
     }
 }
