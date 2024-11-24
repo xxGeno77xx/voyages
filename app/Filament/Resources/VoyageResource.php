@@ -24,6 +24,7 @@ use App\Models\Conditionning;
 use Filament\Resources\Resource;
 use App\Models\ExpensesCategorie;
 use Filament\Support\Colors\Color;
+use Illuminate\Support\Facades\DB;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
@@ -57,25 +58,6 @@ class VoyageResource extends Resource
         return $form
             ->schema([
 
-                Grid::make(2)
-                    ->schema([
-                        // Toggle::make("hasBillsBool")
-                        //     ->label("Avec facture")
-                        //     ->onColor("success")
-                        //     ->onIcon("heroicon-o-check")
-                        //     ->offColor("danger")
-                        //     ->hiddenOn("edit")
-                        //     ->dehydrated(false),
-
-                        // Toggle::make("hasExpensesBool")
-                        //     ->label("Avec Dépenses")
-                        //     ->onColor("success")
-                        //     ->onIcon("heroicon-o-check")
-                        //     ->offColor("danger")
-                        //     ->hiddenOn("edit")
-                        //     ->dehydrated(false)
-                    ]),
-
                 Section::make("")
                     ->schema([
 
@@ -92,7 +74,7 @@ class VoyageResource extends Resource
                                                 ->label(__("Mission"))
                                                 ->columnSpanFull(),
 
-                                            DateTimePicker::make("departure")
+                                            DatePicker::make("departure")
                                                 ->label(__("Départ"))
                                                 ->columnSpanFull(),
 
@@ -341,7 +323,14 @@ class VoyageResource extends Resource
                 TextColumn::make("departure")
                     ->label("Date")
                     ->badge()
-                    ->date("d M Y à H:i")
+                    ->date("d M Y"),
+                TextColumn::make("total")
+                    ->placeholder("-")
+                    ->numeric(0, null, '.'),
+                TextColumn::make("depenses")
+                    ->placeholder("-")
+                    ->numeric(0, null, '.'),
+
             ])
             ->filters([
                 //
@@ -353,7 +342,14 @@ class VoyageResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->modifyQueryUsing(function($query){
+                $query->select(
+                    'voyages.*',
+                    DB::raw('(SELECT SUM(bills.total) FROM bills WHERE bills.voyage_id = voyages.id) as total'),
+                    DB::raw('(SELECT SUM(expenses.amount) FROM expenses WHERE expenses.voyage_id = voyages.id) as depenses')
+                );
+            });
     }
 
     public static function getRelations(): array
@@ -383,6 +379,6 @@ class VoyageResource extends Resource
         }, 0);
 
         // Update the state with the new values
-        $set('total', (number_format($total + $get("commission_fees"), 0, null, " ")));
+        $set('total', $total + $get("commission_fees"));
     }
 }
