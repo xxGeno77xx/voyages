@@ -35,21 +35,18 @@ class VoyageReport extends Report
 
     public function header(Header $header): Header
     {
-        $imagePath = asset('assets/spt.jpg');
+        $imagePath = asset('assets/logo_poste.png');
 
-         
+
         return $header
             ->schema([
                 Image::make($imagePath),
-                // Placeholder::make("test"),
-
-                Text::make("Situation des voyages" )
+ 
+                Text::make("Situation des voyages")
                     ->title()
-                    ->primary() ,
+                    ->primary(),
+ 
 
-                Text::make("Du ".($this->startDate ?? null). " au " .  ($this->endDate ?? null))
-                    ->subtitle(),
-                    
             ]);
     }
 
@@ -69,7 +66,7 @@ class VoyageReport extends Report
     {
         return $body
             ->schema([
-              
+
 
                 Body\Layout\BodyColumn::make()
                     ->schema([
@@ -77,7 +74,7 @@ class VoyageReport extends Report
                             ->fontXl()
                             ->fontBold()
                             ->primary(),
-                        Text::make("This is a list of registered users from the specified date range")
+                        Text::make("Du " . ($this->startDate ?? null) . " au " . ($this->endDate ?? null))
                             ->fontSm()
                             ->secondary(),
                         Body\Table::make()
@@ -91,32 +88,38 @@ class VoyageReport extends Report
                                     ->label("Recette")
                                     ->numeric(0, null, '.')
                                     ->placeholder("-"),
-                                    Body\TextColumn::make("depenses")
+                                Body\TextColumn::make("depenses")
                                     ->badge()
                                     ->label("Dépenses")
                                     ->numeric(0, null, '.')
                                     ->placeholder("-"),
                             ])
                             ->data(
-                                function (?array $filters ) { 
-                                   
-                                    $this->startDate = $from = Carbon::parse((Str::of($filters['departure'] ?? null)->before("-")->trim()))->format("Y-m-d");
-                                    $this->endDate = $to = Carbon::parse((Str::of($filters['departure'] ?? null)->after("-")->trim()))->format("Y-m-d");
+                                function (?array $filters) {
 
-                                    return  Voyage::query()->select(
+                                    $from = Carbon::createFromFormat('d/m/Y',( Str::of($filters['departure'] ?? '01/01/2024')->before("-")->trim()))->format("Y-m-d")?? null;
+
+                                    $to = Carbon::createFromFormat('d/m/Y',( Str::of($filters['departure'] ??'01/01/2024')->after("-")->trim()))->format("Y-m-d")?? null;
+                                   
+                                    $this->startDate = Carbon::parse($from)->format("d/m/Y");
+
+                                    $this->endDate = Carbon::parse($to)->format("d/m/Y");
+
+                                    return Voyage::query()->select(
                                         'voyages.*',
                                         DB::raw('(SELECT SUM(bills.total) FROM bills WHERE bills.voyage_id = voyages.id) as total'),
                                         DB::raw('(SELECT SUM(expenses.amount) FROM expenses WHERE expenses.voyage_id = voyages.id) as depenses')
-                                    ) ->when($from, function ($query, $date) {
+                                    )->when($from, function ($query, $date) {
                                         return $query->whereDate('voyages.departure', '>=', $date);
                                     })
-                                    ->when($to, function ($query, $date) {
-                                        return $query->whereDate('voyages.departure', '<=', $date);
-                                    }
-                                    )
-                                    ->get();
+                                        ->when(
+                                            $to,
+                                            function ($query, $date) {
+                                                return $query->whereDate('voyages.departure', '<=', $date);
+                                            }
+                                        )
+                                        ->get();
 
-                                    
                                 }
                             ),
                         // VerticalSpace::make(),
@@ -127,7 +130,7 @@ class VoyageReport extends Report
                         Text::make("This is a list of verified users from the specified date range")
                             ->fontSm()
                             ->secondary(),
-                        
+
                     ]),
             ]);
     }
@@ -136,7 +139,7 @@ class VoyageReport extends Report
     {
         return $footer
             ->schema([
-              
+
             ]);
     }
 
@@ -147,7 +150,8 @@ class VoyageReport extends Report
 
                 DateRangePicker::make("departure")
                     ->label("Date")
-                    ->placeholder("Sélectionnez une plage de dates"),
+                    ->placeholder("Sélectionnez une plage de dates")
+                    ->autoApply(false),
 
             ]);
     }

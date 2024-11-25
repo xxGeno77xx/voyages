@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string("covered_zone");
             $table->string("full_name");
-            $table->string("telephone");
+            $table->string("telephone")->nullable();
             $table->string("gare");
             $table->timestamps();
         });

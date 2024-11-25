@@ -24,6 +24,8 @@ return new class extends Migration
             // $table->double("volume");
             // $table->integer("unit_price");
             $table->integer("total");
+            $table->integer("paid_amount");
+            $table->integer("remaining_amount");
             // $table->unsignedBigInteger("unit_id");
             $table->json("objects");
             $table->string("bill_number");

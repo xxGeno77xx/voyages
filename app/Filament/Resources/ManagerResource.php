@@ -20,8 +20,12 @@ class ManagerResource extends Resource
 {
     protected static ?string $model = Manager::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-users';
 
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
+    }
     public static function form(Form $form): Form
     {
         return $form
@@ -29,14 +33,21 @@ class ManagerResource extends Resource
                 Grid::make(2)
                 ->schema([
                     TextInput::make("full_name")
-                    ->label(__("Nom complet")),
+                    ->label(__("Nom complet"))
+                    ->required()
+                    ->unique(ignoreRecord: true),
+
                     TextInput::make("telephone")
                     ->label(__("Téléphone"))
                     ->prefix("+228"),
+
                     TextInput::make("gare")
-                    ->label(__("Gare")),
+                    ->label(__("Gare"))
+                    ->required(),
+
                     TextInput::make("covered_zone")
-                    ->label(__("Zone couverte")),
+                    ->label(__("Zone couverte"))
+                    ->required(),
                 ])
             ]);
     }
@@ -47,11 +58,15 @@ class ManagerResource extends Resource
             ->columns([
                 TextColumn::make("full_name")
                 ->label(__("Nom complet")),
+
                 TextColumn::make("telephone")
                 ->label(__("Téléphone"))
-                ->prefix("+228 "),
+                ->prefix("+228 ")
+                ->badge(),
+
                 TextColumn::make("gare")
                 ->label(__("Gare")),
+
                 TextColumn::make("covered_zone")
                 ->label(__("Zone couverte")),
             ])

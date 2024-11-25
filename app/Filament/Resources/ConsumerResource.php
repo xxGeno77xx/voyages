@@ -12,6 +12,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -19,8 +20,13 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class ConsumerResource extends Resource
 {
     protected static ?string $model = Consumer::class;
+    protected static ?string $label = 'Clients';
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-currency-dollar';
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
+    }
 
     public static function form(Form $form): Form
     {
@@ -30,18 +36,25 @@ class ConsumerResource extends Resource
                     ->schema([
                         Grid::make(2)
                             ->schema([
+
                                 TextInput::make("raison_sociale")
                                     ->label(__("Raison sociale")),
+
                                 TextInput::make("telephone")
                                     ->label(__("Téléphone"))
-                                    ->prefix("+228"),
+                                    ->prefix("+228")
+                                    ->required(),
+
                                 TextInput::make("nom")
                                     ->label(__("Nom")),
+
                                 TextInput::make("prenoms")
                                     ->label(__("Prénoms")),
 
+
                                 TextInput::make("locality")
-                                    ->label(__("Localité")),
+                                    ->label(__("Localité"))
+                                    ->required(),
                             ])
 
                     ])
@@ -52,7 +65,18 @@ class ConsumerResource extends Resource
     {
         return $table
             ->columns([
-                //
+                TextColumn::make("raison_sociale")
+                    ->label(__("Raison sociale")),
+
+                TextColumn::make("nom")
+                    ->label(__("Nom"))
+                    ->placeholder("-"),
+
+                TextColumn::make("prenoms")
+                    ->label(__("Prenoms"))
+                    ->placeholder("-"),
+
+
             ])
             ->filters([
                 //
@@ -62,7 +86,7 @@ class ConsumerResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    // Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
     }

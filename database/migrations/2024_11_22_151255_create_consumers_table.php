@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('consumers', function (Blueprint $table) {
             $table->id();
-            $table->string("raison_sociale");
-            $table->string("nom");
-            $table->string("prenoms");
+            $table->string("raison_sociale")->nullable();
+            $table->string("nom")->nullable();
+            $table->string("prenoms")->nullable();
             $table->string("telephone");
             $table->string("locality");
             $table->timestamps();

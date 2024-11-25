@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use Carbon\Carbon;
 use Filament\Forms;
 use App\Models\Bill;
 use App\Models\Unit;
@@ -18,6 +19,7 @@ use App\Models\Consumer;
 use App\Models\Supplier;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
+use Illuminate\Support\Str;
 use Livewire\Attributes\On;
 use App\Models\ObjectNature;
 use App\Models\Conditionning;
@@ -39,6 +41,7 @@ use Filament\Forms\Components\DatePicker;
 use Guava\FilamentClusters\Forms\Cluster;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms\Components\Placeholder;
+use App\Filament\Resources\VehicleResource;
 use Filament\Tables\Columns\TextInputColumn;
 use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Components\DateTimePicker;
@@ -51,7 +54,12 @@ class VoyageResource extends Resource
 
     protected static ?string $model = Voyage::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-globe-europe-africa';
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
+    }
 
     public static function form(Form $form): Form
     {
@@ -72,15 +80,18 @@ class VoyageResource extends Resource
 
                                             TextInput::make("mission")
                                                 ->label(__("Mission"))
-                                                ->columnSpanFull(),
+                                                ->columnSpanFull()
+                                                ->required(),
 
                                             DatePicker::make("departure")
                                                 ->label(__("Départ"))
-                                                ->columnSpanFull(),
+                                                ->columnSpanFull()
+                                                ->required(),
 
                                             Select::make("driver_id")
                                                 ->options(Driver::pluck("full_name", "id"))
                                                 ->searchable()
+                                                ->required()
                                                 ->label(__("Chauffeur"))
                                                 ->createOptionForm([
                                                     TextInput::make('full_name')
@@ -107,14 +118,40 @@ class VoyageResource extends Resource
                                             Select::make("vehicle_id")
                                                 ->label(__("Véhicule"))
                                                 ->searchable()
-                                                ->preload()
-                                                ->options(Vehicle::pluck("plate_number", "id")),
+                                                ->getSearchResultsUsing(fn(string $search): array => Vehicle::where('plate_number', 'like', "%{$search}%")->limit(50)->pluck('plate_number', 'id')->toArray())
+                                                ->getOptionLabelUsing(fn($value): ?string => Vehicle::find($value)?->plate_number)
+                                                ->required()
+                                                ->preload(fn() => Vehicle::pluck("plate_number", "id"))
+                                                ->createOptionForm(fn(Form $form) => VehicleResource::form($form))
+                                                ->createOptionUsing(function (array $data): int {
+                                                    return Vehicle::create($data)->getKey();
+                                                }),
 
                                             Select::make("routing_id")
                                                 ->label(__("Trajet"))
                                                 ->searchable()
+                                                ->required()
                                                 ->preload()
-                                                ->options(Routing::pluck("label", "id")),
+                                                ->options(Routing::pluck("label", "id"))
+                                                ->getSearchResultsUsing(fn(string $search): array => Routing::where('label', 'like', "%{$search}%")->limit(50)->pluck('label', 'id')->toArray())
+                                                ->getOptionLabelUsing(fn($value): ?string => Routing::find($value)?->label)
+                                                ->required()
+                                                ->preload(fn() => Routing::pluck("label", "id"))
+                                                ->createOptionForm([
+                                                    TextInput::make("label")
+                                                        ->label(__("Nom du trajet"))
+                                                        ->required()
+                                                        ->unique(ignoreRecord: true)
+                                                ])
+                                                ->createOptionUsing(function (array $data): int {
+
+                                                    $data = [
+                                                        ...$data,
+                                                        "label" => Str::upper($data["label"])
+
+                                                    ];
+                                                    return Routing::create($data)->getKey();
+                                                }),
                                         ])
                                 ]),
 
@@ -125,6 +162,7 @@ class VoyageResource extends Resource
 
 
                                     Repeater::make("bills")
+                                        ->label(__("Factures"))
                                         ->defaultItems(0)
                                         ->relationship("bills")
                                         ->addActionLabel(__("Ajouter une facture"))
@@ -134,14 +172,19 @@ class VoyageResource extends Resource
                                                 ->schema([
 
                                                     TextInput::make("bill_number")
-                                                        ->label(__("Numéro de facture")),
+                                                        ->label(__("Numéro de facture"))
+                                                        ->required()
+                                                        ->disabled()
+                                                        ->dehydrated(),
 
                                                     DatePicker::make("date")
-                                                        ->label(__("Date")),
+                                                        ->label(__("Date"))
+                                                        ->required(),
 
                                                     Select::make("sender_id")
                                                         ->label("Expéditeur")
                                                         ->searchable()
+                                                        ->required()
                                                         ->options(Consumer::pluck("raison_sociale", "id"))
                                                         ->preload()
                                                         ->native(false)
@@ -151,6 +194,7 @@ class VoyageResource extends Resource
                                                     Select::make("receiver_id")
                                                         ->label("Destinataire")
                                                         ->searchable()
+                                                        ->required()
                                                         ->preload()
                                                         ->options(Consumer::pluck("raison_sociale", "id"))
                                                         ->native(false)
@@ -161,7 +205,10 @@ class VoyageResource extends Resource
                                                         ->label(__("Manager"))
                                                         ->columnSpanFull()
                                                         ->options(Manager::pluck("full_name", "id"))
-                                                        ->searchable(),
+                                                        ->searchable()
+                                                        ->required()
+                                                        ->createOptionForm(fn(Form $form) => ManagerResource::form($form))
+                                                        ->createOptionUsing(fn(array $data) => Manager::create($data)->getKey()),
 
 
 
@@ -183,41 +230,49 @@ class VoyageResource extends Resource
                                                                             Select::make("conditionning_id")
                                                                                 ->label(__("Conditionnement"))
                                                                                 ->options(Conditionning::pluck("label", "id"))
-                                                                                ->searchable(),
+                                                                                ->searchable()
+                                                                                ->required(),
 
                                                                             Select::make("object_nature_id")
                                                                                 ->label(__("Nature"))
                                                                                 ->options(ObjectNature::pluck("label", "id"))
-                                                                                ->searchable(),
+                                                                                ->searchable()
+                                                                                ->required(),
                                                                         ]),
 
 
                                                                     TextInput::make("quantity")
                                                                         ->label(__("Quantité"))
-                                                                        ->integer()->numeric()
+                                                                        ->integer()
+                                                                        ->required()
+                                                                        ->numeric()
                                                                         ->default(1),
 
                                                                     Grid::make(3)
                                                                         ->schema([
                                                                             TextInput::make("weight")
                                                                                 ->label(__("Poids"))
-                                                                                ->numeric(),
+                                                                                ->numeric()
+                                                                                ->required(),
 
                                                                             Cluster::make([
                                                                                 TextInput::make("volume")
                                                                                     ->label(__("Volume"))
-                                                                                    ->numeric(),
+                                                                                    ->numeric()
+                                                                                    ->required(),
 
                                                                                 Select::make("unit_id")
                                                                                     ->options(Unit::pluck("label", "id"))
                                                                                     ->native(false)
                                                                                     ->placeholder(__("Unité"))
+                                                                                    ->required()
                                                                             ])
                                                                                 ->label(__("Volume")),
 
                                                                             TextInput::make("unit_price")
                                                                                 ->label(__("Prix unitaire"))
                                                                                 ->integer()
+                                                                                ->required()
                                                                                 ->live(debounce: "1000")
                                                                                 ->afterStateUpdated(function (Get $get, Set $set) {
 
@@ -226,7 +281,9 @@ class VoyageResource extends Resource
 
                                                                         ]),
                                                                     TextInput::make("sous_total")
-                                                                        ->label(__("Prix total")),
+                                                                        ->label(__("Prix total"))
+                                                                        ->required()
+                                                                        ->readOnly(),
                                                                 ])
                                                             // ->live()
                                                             // ->afterStateUpdated(function (Get $get, Set $set) {
@@ -237,6 +294,7 @@ class VoyageResource extends Resource
                                                     TextInput::make("commission_fees")
                                                         ->label(__("Frais de commission"))
                                                         ->numeric()
+                                                        ->required()
                                                         ->minValue(0)
                                                         ->suffix("FCFA"),
 
@@ -247,6 +305,16 @@ class VoyageResource extends Resource
                                                         Forms\Components\Actions\Action::make('Calculer le total')
                                                             ->action(function (Forms\Get $get, Forms\Set $set) {
                                                                 self::updateTotals($get, $set);
+
+                                                                $year = Carbon::parse($get("date"))->format("Y");
+
+                                                                $managerInitials = Str::upper(substr(Manager::find($get("manager_id"))?->full_name, 0, 3));
+
+                                                                $billsCount = Bill::count();
+
+                                                                $set("bill_number", "N° " . $get("sender_id") . $get("receiver_id") . $year . $managerInitials . $billsCount);
+
+                                                                $set("remaining_amount", ($get("total")?? 0) - ($get("paid_amount") ?? 0));
                                                             })->icon('heroicon-m-pencil-square')
                                                             ->iconPosition(IconPosition::After)
                                                             ->extraAttributes([
@@ -255,16 +323,25 @@ class VoyageResource extends Resource
 
                                                     ])->columnSpanFull(),
 
-
-
+                                                ]),
+                                            Grid::make(3)
+                                                ->schema([
                                                     TextInput::make("total")
                                                         ->label(__("Total"))
                                                         ->columnSpanFull()
-                                                        ->readOnly(),
+                                                        ->readOnly()
+                                                        ->required(),
+                                                    TextInput::make("paid_amount")
+                                                        ->label(__("Montant payé"))
+                                                        ->columnSpanFull()
+                                                        ->required(),
 
-
-
-                                                ])
+                                                    TextInput::make("remaining_amount")
+                                                        ->label(__("Reste à payer"))
+                                                        ->columnSpanFull()
+                                                        ->readOnly()
+                                                        ->required(),
+                                                ]),
                                         ])
                                 ]),
 
@@ -343,7 +420,7 @@ class VoyageResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])
-            ->modifyQueryUsing(function($query){
+            ->modifyQueryUsing(function ($query) {
                 $query->select(
                     'voyages.*',
                     DB::raw('(SELECT SUM(bills.total) FROM bills WHERE bills.voyage_id = voyages.id) as total'),
@@ -371,7 +448,7 @@ class VoyageResource extends Resource
     public static function updateTotals(Get $get, Set $set): void
     {
         // Retrieve all selected products and remove empty rows
-        $objects = collect($get('objects'))->filter(fn($item) => !empty($item['unit_price']) && !empty($item['quantity']));
+        $objects = collect($get('objects'))->filter(fn($item) => !empty ($item['unit_price']) && !empty ($item['quantity']));
 
         // Calculate subtotal based on the selected products and quantities
         $total = $objects->reduce(function ($total, $objects) {
