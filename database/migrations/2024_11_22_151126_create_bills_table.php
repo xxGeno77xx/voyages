@@ -29,7 +29,7 @@ return new class extends Migration
             // $table->unsignedBigInteger("unit_id");
             $table->json("objects");
             $table->string("bill_number");
-            $table->unsignedBigInteger("manager_id");
+            $table->unsignedBigInteger("manager_id")->nullable();
             $table->integer("commission_fees");
             $table->string("observations")->nullable();
             $table->timestamps();

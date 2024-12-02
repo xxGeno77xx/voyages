@@ -206,7 +206,6 @@ class VoyageResource extends Resource
                                                         ->columnSpanFull()
                                                         ->options(Manager::pluck("full_name", "id"))
                                                         ->searchable()
-                                                        ->required()
                                                         ->createOptionForm(fn(Form $form) => ManagerResource::form($form))
                                                         ->createOptionUsing(fn(array $data) => Manager::create($data)->getKey()),
 
@@ -237,7 +236,9 @@ class VoyageResource extends Resource
                                                                                 ->label(__("Nature"))
                                                                                 ->options(ObjectNature::pluck("label", "id"))
                                                                                 ->searchable()
-                                                                                ->required(),
+                                                                                ->required()
+                                                                                ->createOptionForm(fn(Form $form) => [TextInput::make("label")->label(__("intitulé"))])
+                                                                                ->createOptionUsing(fn(array $data) => ObjectNature::create($data)->getKey()),
                                                                         ]),
 
 
@@ -250,24 +251,25 @@ class VoyageResource extends Resource
 
                                                                     Grid::make(3)
                                                                         ->schema([
-                                                                            TextInput::make("weight")
-                                                                                ->label(__("Poids"))
-                                                                                ->numeric()
-                                                                                ->required(),
+                                                                            
 
                                                                             Cluster::make([
-                                                                                TextInput::make("volume")
-                                                                                    ->label(__("Volume"))
-                                                                                    ->numeric()
-                                                                                    ->required(),
+                                                                                TextInput::make("weight")
+                                                                                ->label(__("Poids"))
+                                                                                ->numeric(),
+                                                                               
 
                                                                                 Select::make("unit_id")
                                                                                     ->options(Unit::pluck("label", "id"))
                                                                                     ->native(false)
                                                                                     ->placeholder(__("Unité"))
-                                                                                    ->required()
                                                                             ])
-                                                                                ->label(__("Volume")),
+                                                                                ->label(__("Poids")),
+
+                                                                                 
+                                                                                TextInput::make("volume")
+                                                                                    ->label(__("Volume"))
+                                                                                    ->numeric(),
 
                                                                             TextInput::make("unit_price")
                                                                                 ->label(__("Prix unitaire"))
@@ -282,8 +284,7 @@ class VoyageResource extends Resource
                                                                         ]),
                                                                     TextInput::make("sous_total")
                                                                         ->label(__("Prix total"))
-                                                                        ->required()
-                                                                        ->readOnly(),
+                                                                        ->required(),
                                                                 ])
                                                             // ->live()
                                                             // ->afterStateUpdated(function (Get $get, Set $set) {
@@ -364,6 +365,8 @@ class VoyageResource extends Resource
                                                     Select::make("expense_category_id")
                                                         ->label(__("Categorie"))
                                                         ->native(false)
+                                                        ->createOptionForm(fn(Form $form) => [TextInput::make("label")->label(__("intitulé"))])
+                                                        ->createOptionUsing(fn(array $data) => ExpensesCategorie::create($data)->getKey())
                                                         ->preload()
                                                         ->options(ExpensesCategorie::pluck("label", "id")),
 
@@ -401,12 +404,35 @@ class VoyageResource extends Resource
                     ->label("Date")
                     ->badge()
                     ->date("d M Y"),
+                TextColumn::make(__('routing_id'))
+                    ->label(__('Trajet'))
+                    ->badge()
+                    ->color(Color::Blue)
+                    ->formatStateUsing(fn($state) => Routing::find($state)->label),
                 TextColumn::make("total")
                     ->placeholder("-")
                     ->numeric(0, null, '.'),
                 TextColumn::make("depenses")
                     ->placeholder("-")
+                    ->label(__("Dépenses"))
                     ->numeric(0, null, '.'),
+                TextColumn::make("rentabilité")
+                    ->placeholder("0")
+                    ->numeric(0, null, '.')
+                    ->state(function ($record) {
+
+                        $total = DB::table('bills')->selectRaw('sum(total) as total')
+                            ->whereRaw('voyage_id = ?', [$record->id])
+                            ->value("total");
+                        
+                         $depenes = DB::table('expenses')->selectRaw('sum(amount) as expenses')
+                         ->whereRaw('voyage_id = ?', [$record->id])
+                         ->value("amount");
+ 
+                        return $total - $depenes ;
+                    })
+                    ->badge()
+                    ->Color(fn($state) => $state >= 0 ? Color::Green : Color::Red),
 
             ])
             ->filters([
@@ -417,7 +443,7 @@ class VoyageResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    // Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])
             ->modifyQueryUsing(function ($query) {
