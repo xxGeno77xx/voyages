@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\EnumStatus;
 use Carbon\Carbon;
 use Filament\Forms;
 use App\Models\Bill;
@@ -28,11 +29,13 @@ use App\Models\ExpensesCategorie;
 use Filament\Support\Colors\Color;
 use Illuminate\Support\Facades\DB;
 use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Split;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Wizard;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -42,6 +45,7 @@ use Guava\FilamentClusters\Forms\Cluster;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms\Components\Placeholder;
 use App\Filament\Resources\VehicleResource;
+use Filament\Forms\Components\ToggleButtons;
 use Filament\Tables\Columns\TextInputColumn;
 use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Components\DateTimePicker;
@@ -56,9 +60,7 @@ class VoyageResource extends Resource
 
     protected static ?string $model = Voyage::class;
 
-
     protected static ?string $navigationIcon = 'heroicon-o-globe-europe-africa';
-
     public static function getNavigationBadge(): ?string
     {
         return static::getModel()::count();
@@ -69,56 +71,26 @@ class VoyageResource extends Resource
         return $form
             ->schema([
 
-                Section::make("Ligne Aller")
-                    ->collapsible()
+                Section::make("")
                     ->schema([
 
+                        ToggleButtons::make('line')
+                        ->label("Aller ou retour")
+                        ->inline()
+                        ->options(EnumStatus::class),
+                        
                         Wizard::make([
                             Wizard\Step::make('ligne_voyage')
                                 ->completedIcon('heroicon-m-hand-thumb-up')
                                 ->label(__("Ligne de voyage"))
                                 ->schema([
+                                    TextInput::make("mission")
+                                        ->label(__("Mission"))
+                                        ->columnSpanFull()
+                                        ->required(),
 
                                     Grid::make(2)
                                         ->schema([
-
-                                            TextInput::make("mission")
-                                                ->label(__("Mission"))
-                                                ->columnSpanFull()
-                                                ->required(),
-
-                                            DatePicker::make("departure")
-                                                ->label(__("Départ"))
-                                                ->columnSpanFull()
-                                                ->required(),
-
-                                            Select::make("driver_id")
-                                                ->options(Driver::pluck("full_name", "id"))
-                                                ->searchable()
-                                                ->required()
-                                                ->label(__("Chauffeur"))
-                                                ->createOptionForm([
-                                                    TextInput::make('full_name')
-                                                        ->required()
-                                                        ->label(__("Nom complet")),
-                                                ])
-                                                ->createOptionUsing(function (array $data): int {
-                                                    return Driver::create($data)->getKey();
-                                                }),
-                                            Select::make("ass_driver_id")
-                                                ->options(Driver::pluck("full_name", "id"))
-                                                ->searchable()
-                                                ->preload()
-                                                ->label(__("Chauffeur assistant"))
-                                                ->createOptionForm([
-                                                    TextInput::make('full_name')
-                                                        ->required()
-
-                                                        ->label(__("Nom complet")),
-                                                ])->createOptionUsing(function (array $data): int {
-                                                    return Driver::create($data)->getKey();
-                                                }),
-
                                             Select::make("vehicle_id")
                                                 ->label(__("Véhicule"))
                                                 ->searchable()
@@ -156,6 +128,78 @@ class VoyageResource extends Resource
                                                     ];
                                                     return Routing::create($data)->getKey();
                                                 }),
+                                        ]),
+
+                                    Grid::make(2)
+                                        ->schema([
+
+                                                    Section::make("Allée")
+                                                        ->columns(3)
+                                                        ->schema([
+                                                            DatePicker::make("departure")
+                                                                ->label(__("Date de départ"))
+                                                                ->required(),
+
+                                                            Select::make("driver_id")
+                                                                ->options(Driver::pluck("full_name", "id"))
+                                                                ->searchable()
+                                                                ->required()
+                                                                ->label(__("Chauffeur"))
+                                                                ->createOptionForm([
+                                                                    TextInput::make('full_name')
+                                                                        ->required()
+                                                                        ->label(__("Nom complet")),
+                                                                ])
+                                                                ->createOptionUsing(function (array $data): int {
+                                                                    return Driver::create($data)->getKey();
+                                                                }),
+                                                            Select::make("ass_driver_id")
+                                                                ->options(Driver::pluck("full_name", "id"))
+                                                                ->searchable()
+                                                                ->preload()
+                                                                ->label(__("Chauffeur assistant"))
+                                                                ->createOptionForm([
+                                                                    TextInput::make('full_name')
+                                                                        ->required()
+
+                                                                        ->label(__("Nom complet")),
+                                                                ])->createOptionUsing(function (array $data): int {
+                                                                    return Driver::create($data)->getKey();
+                                                                }),
+                                                            ]),
+                                                            Section::make("Retour")
+                                                            ->columns(3)
+                                                            ->schema([
+                                                                DatePicker::make("arrival")
+                                                                    ->label(__("Date d'arrivée")),
+    
+                                                                Select::make("arrival_driver_id")
+                                                                    ->options(Driver::pluck("full_name", "id"))
+                                                                    ->searchable()
+                                                                    ->label(__("Chauffeur"))
+                                                                    ->createOptionForm([
+                                                                        TextInput::make('full_name')
+                                                                            ->required()
+                                                                            ->label(__("Nom complet")),
+                                                                    ])
+                                                                    ->createOptionUsing(function (array $data): int {
+                                                                        return Driver::create($data)->getKey();
+                                                                    }),
+                                                                Select::make("arrival_ass_driver_id")
+                                                                    ->options(Driver::pluck("full_name", "id"))
+                                                                    ->searchable()
+                                                                    ->preload()
+                                                                    ->label(__("Chauffeur assistant"))
+                                                                    ->createOptionForm([
+                                                                        TextInput::make('full_name')
+                                                                            ->required()
+    
+                                                                            ->label(__("Nom complet")),
+                                                                    ])->createOptionUsing(function (array $data): int {
+                                                                        return Driver::create($data)->getKey();
+                                                                    }),
+                                                            ])
+
                                         ])
                                 ]),
 
@@ -165,6 +209,7 @@ class VoyageResource extends Resource
                                 ->schema([
 
 
+                                   
                                     Repeater::make("bills")
                                         ->label(__("Factures"))
                                         ->defaultItems(0)
@@ -175,6 +220,7 @@ class VoyageResource extends Resource
                                             Grid::make(2)
                                                 ->schema([
 
+                                                    
                                                     TextInput::make("bill_number")
                                                         ->label(__("Numéro de facture"))
                                                         ->required()
@@ -245,13 +291,13 @@ class VoyageResource extends Resource
 
                                                                     Grid::make(3)
                                                                         ->schema([
-                                                                            
+
 
                                                                             Cluster::make([
                                                                                 TextInput::make("weight")
-                                                                                ->label(__("Poids"))
-                                                                                ->numeric(),
-                                                                               
+                                                                                    ->label(__("Poids"))
+                                                                                    ->numeric(),
+
 
                                                                                 Select::make("unit_id")
                                                                                     ->options(Unit::pluck("label", "id"))
@@ -260,10 +306,10 @@ class VoyageResource extends Resource
                                                                             ])
                                                                                 ->label(__("Poids")),
 
-                                                                                 
-                                                                                TextInput::make("volume")
-                                                                                    ->label(__("Volume"))
-                                                                                    ->numeric(),
+
+                                                                            TextInput::make("volume")
+                                                                                ->label(__("Volume"))
+                                                                                ->numeric(),
 
                                                                             TextInput::make("unit_price")
                                                                                 ->label(__("Prix unitaire"))
@@ -280,15 +326,11 @@ class VoyageResource extends Resource
                                                                         ->label(__("Prix total"))
                                                                         ->required(),
                                                                 ])
-                                                            // ->live()
-                                                            // ->afterStateUpdated(function (Get $get, Set $set) {
-                                                            //     self::updateTotals($get, $set);
-                                                            // }),
                                                         ]),
 
-                                                      
 
-                                                    
+
+
 
                                                     Forms\Components\Actions::make([
                                                         Forms\Components\Actions\Action::make('Calculer le total')
@@ -303,7 +345,7 @@ class VoyageResource extends Resource
 
                                                                 $set("bill_number", "N° " . $get("sender_id") . $get("receiver_id") . $year . $managerInitials . $billsCount);
 
-                                                                $set("remaining_amount", ($get("total")?? 0) - ($get("paid_amount") ?? 0));
+                                                                $set("remaining_amount", ($get("total") ?? 0) - ($get("paid_amount") ?? 0));
                                                             })->icon('heroicon-m-pencil-square')
                                                             ->iconPosition(IconPosition::After)
                                                             ->extraAttributes([
@@ -328,25 +370,25 @@ class VoyageResource extends Resource
                                                         ->readOnly()
                                                         ->required(),
                                                 ]),
-                                                
-                                                TextInput::make("observations")
+
+                                            TextInput::make("observations")
                                                 ->label(__("Observations ")),
 
-                                               Grid::make(2)
+                                            Grid::make(2)
                                                 ->schema([
                                                     Select::make("manager_id")
-                                                    ->label(__("Manager"))
-                                                    ->options(Manager::pluck("full_name", "id"))
-                                                    ->searchable()
-                                                    ->createOptionForm(fn(Form $form) => ManagerResource::form($form))
-                                                    ->createOptionUsing(fn(array $data) => Manager::create($data)->getKey()),
-    
-                                                TextInput::make("commission_fees")
-                                                    ->label(__("Frais de commission"))
-                                                    ->numeric()
-                                                    ->required()
-                                                    ->minValue(0)
-                                                    ->suffix("FCFA"),
+                                                        ->label(__("Manager"))
+                                                        ->options(Manager::pluck("full_name", "id"))
+                                                        ->searchable()
+                                                        ->createOptionForm(fn(Form $form) => ManagerResource::form($form))
+                                                        ->createOptionUsing(fn(array $data) => Manager::create($data)->getKey()),
+
+                                                    TextInput::make("commission_fees")
+                                                        ->label(__("Frais de commission"))
+                                                        ->numeric()
+                                                        ->required()
+                                                        ->minValue(0)
+                                                        ->suffix("FCFA"),
                                                 ])
                                         ])
                                 ]),
@@ -429,12 +471,12 @@ class VoyageResource extends Resource
                         $total = DB::table('bills')->selectRaw('sum(total) as total')
                             ->whereRaw('voyage_id = ?', [$record->id])
                             ->value("total");
-                        
-                         $depenes = DB::table('expenses')->selectRaw('sum(amount) as expenses')
-                         ->whereRaw('voyage_id = ?', [$record->id])
-                         ->value("amount");
- 
-                        return $total - $depenes ;
+
+                        $depenes = DB::table('expenses')->selectRaw('sum(amount) as expenses')
+                            ->whereRaw('voyage_id = ?', [$record->id])
+                            ->value("amount");
+
+                        return $total - $depenes;
                     })
                     ->badge()
                     ->Color(fn($state) => $state >= 0 ? Color::Green : Color::Red),

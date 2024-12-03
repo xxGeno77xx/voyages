@@ -17,6 +17,7 @@ return new class extends Migration
             $table->date("date");
             $table->unsignedBigInteger("sender_id")->constrained("consumers");
             $table->unsignedBigInteger("receiver_id")->constrained("consumers");
+            $table->string("line");
             // $table->unsignedBigInteger("object_nature_id")->constrained("object_natures");
             // $table->unsignedBigInteger("conditionning_id")->constrained("conditionnings");
             // $table->integer("quantity");
