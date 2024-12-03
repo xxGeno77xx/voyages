@@ -48,11 +48,14 @@ use Filament\Forms\Components\DateTimePicker;
 use App\Filament\Resources\VoyageResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\VoyageResource\RelationManagers;
+use App\Filament\Resources\VoyageResource\RelationManagers\BillsRelationManager;
+use App\Filament\Resources\VoyageResource\RelationManagers\ExpensesRelationManager;
 
 class VoyageResource extends Resource
 {
 
     protected static ?string $model = Voyage::class;
+
 
     protected static ?string $navigationIcon = 'heroicon-o-globe-europe-africa';
 
@@ -66,7 +69,8 @@ class VoyageResource extends Resource
         return $form
             ->schema([
 
-                Section::make("")
+                Section::make("Ligne Aller")
+                    ->collapsible()
                     ->schema([
 
                         Wizard::make([
@@ -201,16 +205,6 @@ class VoyageResource extends Resource
                                                         ->createOptionForm(fn(Form $form) => ConsumerResource::form($form))
                                                         ->createOptionUsing(fn(array $data) => Consumer::create($data)->getKey()),
 
-                                                    Select::make("manager_id")
-                                                        ->label(__("Manager"))
-                                                        ->columnSpanFull()
-                                                        ->options(Manager::pluck("full_name", "id"))
-                                                        ->searchable()
-                                                        ->createOptionForm(fn(Form $form) => ManagerResource::form($form))
-                                                        ->createOptionUsing(fn(array $data) => Manager::create($data)->getKey()),
-
-
-
                                                     Section::make("Objets")
                                                         ->label(__("objets"))
                                                         ->collapsible()
@@ -292,15 +286,9 @@ class VoyageResource extends Resource
                                                             // }),
                                                         ]),
 
-                                                    TextInput::make("commission_fees")
-                                                        ->label(__("Frais de commission"))
-                                                        ->numeric()
-                                                        ->required()
-                                                        ->minValue(0)
-                                                        ->suffix("FCFA"),
+                                                      
 
-                                                    TextInput::make("observations")
-                                                        ->label(__("Observations ")),
+                                                    
 
                                                     Forms\Components\Actions::make([
                                                         Forms\Components\Actions\Action::make('Calculer le total')
@@ -329,20 +317,37 @@ class VoyageResource extends Resource
                                                 ->schema([
                                                     TextInput::make("total")
                                                         ->label(__("Total"))
-                                                        ->columnSpanFull()
                                                         ->readOnly()
                                                         ->required(),
                                                     TextInput::make("paid_amount")
                                                         ->label(__("Montant payé"))
-                                                        ->columnSpanFull()
                                                         ->required(),
 
                                                     TextInput::make("remaining_amount")
                                                         ->label(__("Reste à payer"))
-                                                        ->columnSpanFull()
                                                         ->readOnly()
                                                         ->required(),
                                                 ]),
+                                                
+                                                TextInput::make("observations")
+                                                ->label(__("Observations ")),
+
+                                               Grid::make(2)
+                                                ->schema([
+                                                    Select::make("manager_id")
+                                                    ->label(__("Manager"))
+                                                    ->options(Manager::pluck("full_name", "id"))
+                                                    ->searchable()
+                                                    ->createOptionForm(fn(Form $form) => ManagerResource::form($form))
+                                                    ->createOptionUsing(fn(array $data) => Manager::create($data)->getKey()),
+    
+                                                TextInput::make("commission_fees")
+                                                    ->label(__("Frais de commission"))
+                                                    ->numeric()
+                                                    ->required()
+                                                    ->minValue(0)
+                                                    ->suffix("FCFA"),
+                                                ])
                                         ])
                                 ]),
 
@@ -363,7 +368,7 @@ class VoyageResource extends Resource
                                                         ->required(),
 
                                                     Select::make("expense_category_id")
-                                                        ->label(__("Categorie"))
+                                                        ->label(__("Catégorie"))
                                                         ->native(false)
                                                         ->createOptionForm(fn(Form $form) => [TextInput::make("label")->label(__("intitulé"))])
                                                         ->createOptionUsing(fn(array $data) => ExpensesCategorie::create($data)->getKey())
@@ -458,7 +463,8 @@ class VoyageResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            BillsRelationManager::class,
+            ExpensesRelationManager::class
         ];
     }
 
@@ -482,6 +488,6 @@ class VoyageResource extends Resource
         }, 0);
 
         // Update the state with the new values
-        $set('total', $total + $get("commission_fees"));
+        $set('total', $total /*+ $get("commission_fees")*/);
     }
 }
