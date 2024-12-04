@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger("voyage_id")->constrained(table: "bills");
             $table->date("date");
+            $table->string("line");
             $table->unsignedBigInteger("expense_category_id")->constrained("expenses_categories");
             $table->unsignedBigInteger("supplier_id")->constrained("suppliers");
             $table->string("description");

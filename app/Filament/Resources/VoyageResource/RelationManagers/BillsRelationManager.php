@@ -238,7 +238,7 @@ class BillsRelationManager extends RelationManager
 
                 IconColumn::make('status')
                     ->label(__("Statut"))
-                    ->state(fn($record) => $record->remaining_amount == 0 ? 'ok' : 'ko')
+                    ->state(fn($record) => $record->remaining_amount == 0  || ($record->remaining_amount<0) ? 'ok' : 'ko')
                     ->icon(fn(string $state): string => $state == 'ok' ? 'heroicon-o-check-circle' : 'heroicon-o-clock')
                     ->color(fn(string $state) => match ($state) {
                         'ko' => Color::Yellow,

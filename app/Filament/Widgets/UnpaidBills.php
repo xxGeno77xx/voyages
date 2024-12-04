@@ -26,7 +26,7 @@ class UnpaidBills extends BaseWidget
         )
             ->query(
                Voyage::query()->join("bills","bills.voyage_id", "voyages.id")
-               ->where("remaining_amount", "<>", 0)
+               ->where("remaining_amount", ">", 0)
                 ->select("voyages.*", "bills.remaining_amount", "bills.bill_number" , "bills.sender_id", "bills.receiver_id")
             )
             ->columns([

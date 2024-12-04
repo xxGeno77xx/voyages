@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('voyages', function (Blueprint $table) {
             $table->id();
             $table->date("departure");
-            $table->date("arrival");
+            $table->date("arrival")->nullable();
             $table->unsignedBigInteger("driver_id")->constrained(table:"drivers");
-            $table->unsignedBigInteger("ass_driver_id")->constrained(table:"drivers");
+            $table->unsignedBigInteger("ass_driver_id")->nullable()->constrained(table:"drivers");
 
             $table->unsignedBigInteger("arrival_driver_id")->nullable()->constrained(table:"drivers");
             $table->unsignedBigInteger("arrival_ass_driver_id")->nullable()->constrained(table:"drivers");

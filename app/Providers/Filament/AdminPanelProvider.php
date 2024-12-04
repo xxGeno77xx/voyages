@@ -57,7 +57,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->plugins([
                         ReportsPlugin::make(),
-                        \Phpsa\FilamentAuthentication\FilamentAuthentication::make(),
+                        // \Phpsa\FilamentAuthentication\FilamentAuthentication::make(),
                     ]);
     }
 }

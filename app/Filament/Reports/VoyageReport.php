@@ -70,10 +70,10 @@ class VoyageReport extends Report
 
                 Body\Layout\BodyColumn::make()
                     ->schema([
-                        Text::make("Registered Users")
-                            ->fontXl()
-                            ->fontBold()
-                            ->primary(),
+                        // Text::make("Registered Users")
+                        //     ->fontXl()
+                        //     ->fontBold()
+                        //     ->primary(),
                         Text::make("Du " . ($this->startDate ?? null) . " au " . ($this->endDate ?? null))
                             ->fontSm()
                             ->secondary(),
@@ -123,13 +123,13 @@ class VoyageReport extends Report
                                 }
                             ),
                         // VerticalSpace::make(),
-                        Text::make("Verified Users")
-                            ->fontXl()
-                            ->fontBold()
-                            ->primary(),
-                        Text::make("This is a list of verified users from the specified date range")
-                            ->fontSm()
-                            ->secondary(),
+                        // Text::make("Verified Users")
+                        //     ->fontXl()
+                        //     ->fontBold()
+                        //     ->primary(),
+                        // Text::make("This is a list of verified users from the specified date range")
+                        //     ->fontSm()
+                        //     ->secondary(),
 
                     ]),
             ]);

@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('expenses_categories', function (Blueprint $table) {
             $table->id();
             $table->string("label");
-            $table->string("line");
             $table->timestamps();
         });
     }

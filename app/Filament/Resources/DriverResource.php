@@ -19,7 +19,8 @@ class DriverResource extends Resource
 {
     protected static ?string $model = Driver::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-identification';
+    protected static ?string $label = 'Chauffeurs';
 
     public static function getNavigationBadge(): ?string
     {
