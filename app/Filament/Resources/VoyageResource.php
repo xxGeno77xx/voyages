@@ -48,6 +48,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms\Components\Placeholder;
 use App\Filament\Resources\VehicleResource;
 use Filament\Forms\Components\ToggleButtons;
+use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextInputColumn;
 use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Components\DateTimePicker;
@@ -332,10 +333,6 @@ class VoyageResource extends Resource
                                                                 ])
                                                         ]),
 
-
-
-
-
                                                     Forms\Components\Actions::make([
                                                         Forms\Components\Actions\Action::make('Calculer le total')
                                                             ->action(function (Forms\Get $get, Forms\Set $set) {
@@ -363,15 +360,19 @@ class VoyageResource extends Resource
                                                 ->schema([
                                                     TextInput::make("total")
                                                         ->label(__("Total"))
-                                                        ->required(),
+                                                        ->required()
+                                                        ->default(0)
+                                                        ->integer(),
                                                     TextInput::make("paid_amount")
                                                         ->label(__("Montant payé"))
-                                                        ->required(),
+                                                        ->required()
+                                                        ->integer(),
 
                                                     TextInput::make("remaining_amount")
                                                         ->label(__("Reste à payer"))
                                                         ->readOnly()
-                                                        ->required(),
+                                                        ->required()
+                                                        ->integer(),
                                                 ]),
 
                                             TextInput::make("observations")
@@ -479,6 +480,7 @@ class VoyageResource extends Resource
 
                 TextColumn::make("total")
                     ->placeholder("-")
+                    ->summarize(Sum::make())
                     ->numeric(0, null, '.'),
 
                 TextColumn::make("depenses")
@@ -557,8 +559,12 @@ class VoyageResource extends Resource
         }, 0);
 
         // Update the state with the new values
-
-        $set('total', $total /*+ $get("commission_fees")*/);
+        if(is_null($get("total")))
+        {
+            $set('total', $total /*+ $get("commission_fees")*/);
+        }
+        
+        
 
 
     }

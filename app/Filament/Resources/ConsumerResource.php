@@ -38,7 +38,8 @@ class ConsumerResource extends Resource
                             ->schema([
 
                                 TextInput::make("raison_sociale")
-                                    ->label(__("Raison sociale")),
+                                    ->label(__("Raison sociale"))
+                                    ->unique(ignoreRecord:true),
 
                                 TextInput::make("telephone")
                                     ->label(__("Téléphone"))

@@ -41,6 +41,7 @@ class DriverResource extends Resource
             ->columns([
                 TextColumn::make("full_name")
                     ->label(__('Nom complet'))
+                    ->unique(ignoreRecord:true)
                     ->searchable()
             ])
             ->filters([
