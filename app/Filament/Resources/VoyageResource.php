@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources;
 
-use App\Enums\EnumStatus;
 use Carbon\Carbon;
 use Filament\Forms;
 use App\Models\Bill;
@@ -19,6 +18,7 @@ use Filament\Forms\Set;
 use App\Models\Consumer;
 use App\Models\Supplier;
 use Filament\Forms\Form;
+use App\Enums\EnumStatus;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
 use Livewire\Attributes\On;
@@ -29,6 +29,7 @@ use App\Models\ExpensesCategorie;
 use Filament\Support\Colors\Color;
 use Illuminate\Support\Facades\DB;
 use Filament\Forms\Components\Grid;
+use Filament\Tables\Filters\Filter;
 use Filament\Forms\Components\Split;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
@@ -41,6 +42,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Support\Enums\IconPosition;
 use Filament\Forms\Components\DatePicker;
+use Filament\Tables\Filters\SelectFilter;
 use Guava\FilamentClusters\Forms\Cluster;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms\Components\Placeholder;
@@ -168,7 +170,8 @@ class VoyageResource extends Resource
                                                 ->columns(3)
                                                 ->schema([
                                                     DatePicker::make("arrival")
-                                                        ->label(__("Date d'arrivée")),
+                                                        ->label(__("Date d'arrivée"))
+                                                        ->after("departure"),
 
                                                     Select::make("arrival_driver_id")
                                                         ->options(Driver::pluck("full_name", "id"))
@@ -452,11 +455,20 @@ class VoyageResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make("mission"),
-                
+                TextColumn::make("mission")
+                    ->searchable(),
+
                 TextColumn::make("departure")
-                    ->label("Date")
+                    ->label("Date aller")
                     ->badge()
+                    ->color("success")
+                    ->date("d M Y"),
+
+                TextColumn::make("arrival")
+                    ->label("Date retour")
+                    ->badge()
+                    ->placeholder("-")
+                    ->color("warning")
                     ->date("d M Y"),
 
                 TextColumn::make(__('routing_id'))
@@ -494,7 +506,10 @@ class VoyageResource extends Resource
 
             ])
             ->filters([
-                //
+
+                self::rountingFilter(),
+                self::dateAllerFilter(),
+                self::dateRetourFilter(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -510,7 +525,8 @@ class VoyageResource extends Resource
                     DB::raw('(SELECT SUM(bills.total) FROM bills WHERE bills.voyage_id = voyages.id) as total'),
                     DB::raw('(SELECT SUM(expenses.amount) FROM expenses WHERE expenses.voyage_id = voyages.id) as depenses')
                 );
-            });
+            })
+            ->deferFilters();
     }
 
     public static function getRelations(): array
@@ -541,9 +557,77 @@ class VoyageResource extends Resource
         }, 0);
 
         // Update the state with the new values
-       
+
         $set('total', $total /*+ $get("commission_fees")*/);
-        
-       
+
+
     }
+
+    public static function rountingFilter()
+    {
+        return SelectFilter::make('routing_id')
+            ->label("Trajet")
+            ->multiple()
+            ->options(Routing::pluck("label", "id"))
+            ->searchable();
+    }
+    public static function dateAllerFilter()
+    {
+        return Filter::make('departure')
+            ->form([
+                Section::make("Date aller")
+                    ->collapsed()
+                    ->schema([
+
+                        DatePicker::make('created_from')
+                            ->label("Date début"),
+                        DatePicker::make('created_until')
+                            ->label("Date fin"),
+
+                    ])
+
+            ])
+            ->query(function (Builder $query, array $data): Builder {
+                return $query
+                    ->when(
+                        $data['created_from'],
+                        fn(Builder $query, $date): Builder => $query->whereDate('departure', '>=', $date),
+                    )
+                    ->when(
+                        $data['created_until'],
+                        fn(Builder $query, $date): Builder => $query->whereDate('departure', '<=', $date),
+                    );
+            });
+    }
+
+    public static function dateRetourFilter()
+    {
+        return Filter::make('arrival')
+            ->form([
+                Section::make("Date retour")
+                    ->collapsed()
+                    ->schema([
+
+                        DatePicker::make('created_from')
+                            ->label("Date début"),
+                        DatePicker::make('created_until')
+                            ->label("Date fin"),
+
+                    ])
+
+            ])
+            ->query(function (Builder $query, array $data): Builder {
+                return $query
+                    ->when(
+                        $data['created_from'],
+                        fn(Builder $query, $date): Builder => $query->whereDate('arrival', '>=', $date),
+                    )
+                    ->when(
+                        $data['created_until'],
+                        fn(Builder $query, $date): Builder => $query->whereDate('arrival', '<=', $date),
+                    );
+            });
+    }
+
+
 }

@@ -73,6 +73,7 @@ class UserResource extends Resource
             'name'              => TextColumn::make('name')
                 ->searchable()
                 ->sortable()
+                ->searchable()
                 ->label(strval(__('filament-authentication::filament-authentication.field.user.name'))),
             'username'             => TextColumn::make('username')
                 ->searchable()

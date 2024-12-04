@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\VoyageResource\RelationManagers;
 
-use App\Filament\Resources\VoyageResource;
 use Carbon\Carbon;
 use Filament\Forms;
 use App\Models\Bill;
@@ -13,12 +12,15 @@ use Filament\Forms\Get;
 use Filament\Forms\Set;
 use App\Models\Consumer;
 use Filament\Forms\Form;
+use App\Enums\EnumStatus;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
 use App\Models\ObjectNature;
 use App\Models\Conditionning;
 use Filament\Support\Colors\Color;
 use Filament\Forms\Components\Grid;
+use Filament\Tables\Filters\Filter;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Repeater;
@@ -28,8 +30,10 @@ use Filament\Support\Enums\IconPosition;
 use Filament\Forms\Components\DatePicker;
 use Guava\FilamentClusters\Forms\Cluster;
 use Illuminate\Database\Eloquent\Builder;
+use App\Filament\Resources\VoyageResource;
 use App\Filament\Resources\ManagerResource;
 use App\Filament\Resources\ConsumerResource;
+use Filament\Forms\Components\ToggleButtons;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Resources\RelationManagers\RelationManager;
 
@@ -154,15 +158,8 @@ class BillsRelationManager extends RelationManager
                                         ->label(__("Prix total"))
                                         ->required(),
                                 ])
-                            // ->live()
-                            // ->afterStateUpdated(function (Get $get, Set $set) {
-                            //     self::updateTotals($get, $set);
-                            // }),
                         ]),
 
-                      
-
-                    
 
                     Forms\Components\Actions::make([
                         Forms\Components\Actions\Action::make('Calculer le total')
@@ -228,10 +225,15 @@ class BillsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+        ->deferFilters()
             ->recordTitleAttribute('id')
             ->columns([
                 Tables\Columns\TextColumn::make('bill_number')
                     ->label(__("Numéro de facture")),
+
+                TextColumn::make("date")
+                    ->date("d M Y"),
+                    
                 Tables\Columns\TextColumn::make('total')
                     ->label(__("Montant"))
                     ->numeric(0, null,'.'),
@@ -246,7 +248,7 @@ class BillsRelationManager extends RelationManager
                     })
             ])
             ->filters([
-                //
+                Self::lineFilter(),
             ])
             ->headerActions([
                 // Tables\Actions\CreateAction::make(),
@@ -262,4 +264,22 @@ class BillsRelationManager extends RelationManager
             ]);
     }
  
+
+    public static function lineFilter()
+    {
+        return Filter::make("line")
+        ->form([
+            ToggleButtons::make('line')
+                                    ->label("Aller ou retour")
+                                    ->inline()
+                                    ->options(EnumStatus::class),
+        ])
+        ->query(function (Builder $query, array $data): Builder {
+            return $query
+                ->when( 
+                    $data['line'],
+                    fn (Builder $query, $line): Builder => $query->where('line', '=', $line),
+                );
+        });
+    }
 }

@@ -36,6 +36,7 @@ class SupplierResource extends Resource
                     ->schema([
                         TextInput::make("raison_sociale")
                             ->required()
+                            ->searchable()
                             ->unique(ignoreRecord: true)
                             ->label("Raison sociale")
                     ])

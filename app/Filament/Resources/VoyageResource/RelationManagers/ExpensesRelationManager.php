@@ -83,7 +83,7 @@ class ExpensesRelationManager extends RelationManager
 
             ])
             ->filters([
-                //
+                BillsRelationManager::lineFilter()
             ])
             ->headerActions([
                 // Tables\Actions\CreateAction::make(),
@@ -96,6 +96,7 @@ class ExpensesRelationManager extends RelationManager
                 Tables\Actions\BulkActionGroup::make([
                     // Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->deferFilters();
     }
 }

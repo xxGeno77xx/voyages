@@ -57,7 +57,8 @@ class ManagerResource extends Resource
         return $table
             ->columns([
                 TextColumn::make("full_name")
-                ->label(__("Nom complet")),
+                ->label(__("Nom complet"))
+                ->searchable(),
 
                 TextColumn::make("telephone")
                 ->label(__("Téléphone"))
