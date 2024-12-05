@@ -13,6 +13,7 @@ class VoyagesChart extends ChartWidget
     protected static ?string $heading = 'Nombre de voyages';
     public ?string $filter = 'today';
 
+
     protected function getFilters(): ?array
 {
     return [
@@ -30,10 +31,10 @@ class VoyagesChart extends ChartWidget
         
 
         match($activeFilter){
-            'today' =>  $data = Trend::model(Voyage::class)->between(start: now(), end: now(),)->perDay()->count(),
-            'week' =>   $data = Trend::model(Voyage::class)->between(start: now()->startOfWeek(), end: now()->endOfWeek(),)->perDay()->count(),
-            'month' => $data = Trend::model(Voyage::class)->between(start: now()->startOfMonth(), end: now()->endOfMonth(),)->perDay()->count(),
-            'year' =>  $data = Trend::model(Voyage::class)->between(start: now()->startOfYear(), end: now()->endOfYear(),)->perMonth()->count(),
+            'today' =>  $data = Trend::model(Voyage::class)->dateColumn('departure')->between(start: now(), end: now(),)->perDay()->count(),
+            'week' =>   $data = Trend::model(Voyage::class)->dateColumn('departure')->between(start: now()->startOfWeek(), end: now()->endOfWeek(),)->perDay()->count(),
+            'month' => $data = Trend::model(Voyage::class)->dateColumn('departure')->between(start: now()->startOfMonth(), end: now()->endOfMonth(),)->perDay()->count(),
+            'year' =>  $data = Trend::model(Voyage::class)->dateColumn('departure')->between(start: now()->startOfYear(), end: now()->endOfYear(),)->perMonth()->count(),
         };
 
         match($activeFilter){

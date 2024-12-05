@@ -13,9 +13,9 @@ use Filament\Widgets\TableWidget as BaseWidget;
 
 class UnpaidBills extends BaseWidget
 {
-
     protected static ?string $heading = "Factures incomplètes";
-    protected int | string | array $columnSpan = 'full';
+    protected int | string | array $columnSpan = 1;
+
     protected static ?int $sort = 2;
 
     public function table(Table $table): Table
@@ -42,13 +42,16 @@ class UnpaidBills extends BaseWidget
                 TextColumn::make("bill_number")
                 ->label(__("Numero de la facture")),
 
-                TextColumn::make("sender_id")
-                ->label(__("Expéditeur"))
-                ->formatStateUsing(fn($state) => Consumer::find($state)->raison_sociale),
+                TextColumn::make("exp/send")
+                ->label(__("Expéditeur/Destinataire"))
+                ->state(function($record){
+                    
+                    $sender = Consumer::find($record->sender_id)->raison_sociale;
 
-                TextColumn::make("receiver_id")
-                ->label(__("Destinataire"))
-                ->formatStateUsing(fn($state) => Consumer::find($state)->raison_sociale),
+                    $receiver = Consumer::find($record->receiver_id)->raison_sociale;
+
+                    return $sender.'/'.$receiver;
+                }),
 
             ]);
     }
