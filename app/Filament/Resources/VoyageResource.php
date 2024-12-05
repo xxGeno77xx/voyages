@@ -20,6 +20,7 @@ use App\Models\Supplier;
 use Filament\Forms\Form;
 use App\Enums\EnumStatus;
 use Filament\Tables\Table;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 use Livewire\Attributes\On;
 use App\Models\ObjectNature;
@@ -334,7 +335,7 @@ class VoyageResource extends Resource
                                                         ]),
 
                                                     Forms\Components\Actions::make([
-                                                        Forms\Components\Actions\Action::make('Calculer le total')
+                                                        Forms\Components\Actions\Action::make('Calculer le total des objets')
                                                             ->action(function (Forms\Get $get, Forms\Set $set) {
                                                                 self::updateTotals($get, $set);
 
@@ -346,7 +347,7 @@ class VoyageResource extends Resource
 
                                                                 $set("bill_number", "N° " . $get("sender_id") . $get("receiver_id") . $year . $managerInitials . $billsCount);
 
-                                                                $set("remaining_amount", ($get("total") ?? 0) - ($get("paid_amount") ?? 0));
+                                                                // $set("remaining_amount", ($get("total") ?? 0) - ($get("paid_amount") ?? 0));
                                                             })->icon('heroicon-m-pencil-square')
                                                             ->iconPosition(IconPosition::After)
                                                             ->extraAttributes([
@@ -356,17 +357,29 @@ class VoyageResource extends Resource
                                                     ])->columnSpanFull(),
 
                                                 ]),
+                                            TextInput::make("objects_total")
+                                                ->label((new HtmlString('<i>Total des objets de la facture</i>')))
+                                                ->dehydrated(false)
+                                                ->default(0)
+                                                ->readOnly()
+                                                ->numeric(),
+
                                             Grid::make(3)
                                                 ->schema([
                                                     TextInput::make("total")
                                                         ->label(__("Total"))
                                                         ->required()
                                                         ->default(0)
-                                                        ->integer(),
+                                                        ->integer()
+                                                        ->live()
+                                                        ->afterStateUpdated(fn($get, $set) => Self::billTotal($get, $set)                                                       ),
+
                                                     TextInput::make("paid_amount")
                                                         ->label(__("Montant payé"))
                                                         ->required()
-                                                        ->integer(),
+                                                        ->integer()
+                                                        ->live()
+                                                        ->afterStateUpdated(fn($get, $set) => Self::billTotal($get, $set) ),
 
                                                     TextInput::make("remaining_amount")
                                                         ->label(__("Reste à payer"))
@@ -559,14 +572,9 @@ class VoyageResource extends Resource
         }, 0);
 
         // Update the state with the new values
-        if(is_null($get("total")))
-        {
-            $set('total', $total /*+ $get("commission_fees")*/);
-        }
-        
-        
-
-
+   
+            $set('objects_total', $total /*+ $get("commission_fees")*/);
+       
     }
 
     public static function rountingFilter()
@@ -581,18 +589,18 @@ class VoyageResource extends Resource
     {
         return Filter::make('departure')
             ->form([
-                Section::make("Date aller")
-                    ->collapsed()
-                    ->schema([
+                    Section::make("Date aller")
+                        ->collapsed()
+                        ->schema([
 
-                        DatePicker::make('created_from')
-                            ->label("Date début"),
-                        DatePicker::make('created_until')
-                            ->label("Date fin"),
+                                DatePicker::make('created_from')
+                                    ->label("Date début"),
+                                DatePicker::make('created_until')
+                                    ->label("Date fin"),
 
-                    ])
+                            ])
 
-            ])
+                ])
             ->query(function (Builder $query, array $data): Builder {
                 return $query
                     ->when(
@@ -606,22 +614,27 @@ class VoyageResource extends Resource
             });
     }
 
+
+    public static function billTotal($get, $set){
+        $set("remaining_amount", ($get("total") ?? 0) + ($get("objects_total") ?? 0) - ($get("paid_amount") ?? 0));
+
+    }
     public static function dateRetourFilter()
     {
         return Filter::make('arrival')
             ->form([
-                Section::make("Date retour")
-                    ->collapsed()
-                    ->schema([
+                    Section::make("Date retour")
+                        ->collapsed()
+                        ->schema([
 
-                        DatePicker::make('created_from')
-                            ->label("Date début"),
-                        DatePicker::make('created_until')
-                            ->label("Date fin"),
+                                DatePicker::make('created_from')
+                                    ->label("Date début"),
+                                DatePicker::make('created_until')
+                                    ->label("Date fin"),
 
-                    ])
+                            ])
 
-            ])
+                ])
             ->query(function (Builder $query, array $data): Builder {
                 return $query
                     ->when(

@@ -18,16 +18,10 @@ return new class extends Migration
             $table->unsignedBigInteger("sender_id")->constrained("consumers");
             $table->unsignedBigInteger("receiver_id")->constrained("consumers");
             $table->string("line");
-            // $table->unsignedBigInteger("object_nature_id")->constrained("object_natures");
-            // $table->unsignedBigInteger("conditionning_id")->constrained("conditionnings");
-            // $table->integer("quantity");
-            // $table->double("weight");
-            // $table->double("volume");
-            // $table->integer("unit_price");
+            $table->integer("objects_total")->nullable();
             $table->integer("total");
             $table->integer("paid_amount");
             $table->integer("remaining_amount");
-            // $table->unsignedBigInteger("unit_id");
             $table->json("objects");
             $table->string("bill_number");
             $table->unsignedBigInteger("manager_id")->nullable();
