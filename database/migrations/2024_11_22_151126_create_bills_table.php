@@ -19,10 +19,10 @@ return new class extends Migration
             $table->unsignedBigInteger("receiver_id")->constrained("consumers");
             $table->string("line");
             $table->integer("objects_total")->nullable();
-            $table->integer("other_amount");
-            $table->integer("total");
-            $table->integer("paid_amount");
-            $table->integer("remaining_amount");
+            $table->integer("other_amount")->nullable();
+            $table->integer("total")->nullable();
+            $table->integer("paid_amount")->nullable();
+            $table->integer("remaining_amount")->nullable();
             $table->json("objects");
             $table->string("bill_number");
             $table->unsignedBigInteger("manager_id")->nullable();
