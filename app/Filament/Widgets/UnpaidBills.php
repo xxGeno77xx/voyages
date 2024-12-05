@@ -7,6 +7,7 @@ use Filament\Tables;
 use App\Models\Voyage;
 use App\Models\Consumer;
 use Filament\Tables\Table;
+use Filament\Support\Colors\Color;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Widgets\TableWidget as BaseWidget;
@@ -30,27 +31,27 @@ class UnpaidBills extends BaseWidget
                 ->select("voyages.*", "bills.remaining_amount", "bills.bill_number" , "bills.sender_id", "bills.receiver_id")
             )
             ->columns([
-                TextColumn::make("mission"),
+                TextColumn::make("mission")
+                    ->limit(30),
 
                 TextColumn::make("remaining_amount")
                     ->label(__("Reste à payer"))
                     ->badge(),
 
                 TextColumn::make("bill_number")
-                ->label(__("Numero de la facture")),
-
-                TextColumn::make("bill_number")
-                ->label(__("Numero de la facture")),
+                ->label(__("Numero de facture")),
 
                 TextColumn::make("exp/send")
-                ->label(__("Expéditeur/Destinataire"))
+                ->badge()
+                ->color(Color::Amber)
+                ->label(__("Expéditeur / Destinataire"))
                 ->state(function($record){
                     
                     $sender = Consumer::find($record->sender_id)->raison_sociale;
 
                     $receiver = Consumer::find($record->receiver_id)->raison_sociale;
 
-                    return $sender.'/'.$receiver;
+                    return $sender.' / '.$receiver;
                 }),
 
             ]);
