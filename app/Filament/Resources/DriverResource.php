@@ -7,6 +7,7 @@ use App\Filament\Resources\DriverResource\RelationManagers;
 use App\Models\Driver;
 use Filament\Forms;
 use Filament\Forms\Components\Section;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -30,8 +31,13 @@ class DriverResource extends Resource
     {
         return $form
             ->schema([
-                Section::make("full_name")
-                    ->label(__("Nom complet"))
+                Section::make("Informations")
+                    ->schema([
+                        TextInput::make("full_name")
+                        ->label(__("Nom complet"))
+                        ->unique(ignoreRecord:true)
+                    ])
+                    
             ]);
     }
 
@@ -41,7 +47,6 @@ class DriverResource extends Resource
             ->columns([
                 TextColumn::make("full_name")
                     ->label(__('Nom complet'))
-                    ->unique(ignoreRecord:true)
                     ->searchable()
             ])
             ->filters([
