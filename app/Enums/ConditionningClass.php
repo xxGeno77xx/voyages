@@ -9,7 +9,7 @@ use \Spatie\Enum\Enum;
  * @method static self Sac()
  * @method static self Panier()
  * @method static self Bidon()
- * @method static self En_vrac()
+ * @method static self Vrac()
  */
 class ConditionningClass extends Enum
 {

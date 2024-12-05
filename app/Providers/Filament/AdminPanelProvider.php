@@ -2,13 +2,18 @@
 
 namespace App\Providers\Filament;
 
+use Carbon\Carbon;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\Widgets;
+use App\Models\Voyage;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
 use EightyNine\Reports\ReportsPlugin;
+use Illuminate\Support\Facades\Blade;
 use Filament\Http\Middleware\Authenticate;
+use Filament\Support\Facades\FilamentView;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Routing\Middleware\SubstituteBindings;
@@ -21,8 +26,25 @@ use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 
 class AdminPanelProvider extends PanelProvider
 {
+
+    
     public function panel(Panel $panel): Panel
     {
+
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::PAGE_HEADER_ACTIONS_AFTER,
+                function():string{
+
+                    $startDate = Voyage::first()?->departure ?? today()->format('d M Y');
+
+                    $string = 'Ces chiffres s\'étendent du '. Carbon::parse($startDate)->translatedFormat('d M Y').' à aujourd\'hui';
+
+                    $returnString = is_null($startDate)? " " : $string;
+
+                    return $returnString;
+
+                },scopes: Pages\Dashboard::class,);
+
         return $panel
             ->default()
             ->id('admin')

@@ -5,8 +5,8 @@ namespace App\Enums;
 use \Spatie\Enum\Enum;
 
 /**
- * @method static self Porteurs()
- * @method static self Dechargeurs()
+ * @method static self Arachide()
+ * @method static self Tuyaux()
  */
 class ObjectNaturesClass extends Enum
 {

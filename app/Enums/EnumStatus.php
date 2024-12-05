@@ -12,8 +12,6 @@ enum EnumStatus: string implements HasColor, HasIcon, HasLabel
 
     case Retour = 'retour';
 
-
-
     public function getLabel(): string
     {
         return match ($this) {

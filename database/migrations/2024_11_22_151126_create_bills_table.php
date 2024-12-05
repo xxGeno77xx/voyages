@@ -19,6 +19,7 @@ return new class extends Migration
             $table->unsignedBigInteger("receiver_id")->constrained("consumers");
             $table->string("line");
             $table->integer("objects_total")->nullable();
+            $table->integer("other_amount");
             $table->integer("total");
             $table->integer("paid_amount");
             $table->integer("remaining_amount");
