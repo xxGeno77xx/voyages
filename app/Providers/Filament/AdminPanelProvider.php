@@ -8,12 +8,14 @@ use Filament\Panel;
 use Filament\Widgets;
 use App\Models\Voyage;
 use Filament\PanelProvider;
+use Filament\Navigation\MenuItem;
 use Filament\Support\Colors\Color;
 use Filament\View\PanelsRenderHook;
 use EightyNine\Reports\ReportsPlugin;
 use Illuminate\Support\Facades\Blade;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Support\Facades\FilamentView;
+use App\Filament\Resources\CustomEditProfile;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Routing\Middleware\SubstituteBindings;
@@ -47,8 +49,10 @@ class AdminPanelProvider extends PanelProvider
 
         return $panel
             ->default()
+            ->sidebarFullyCollapsibleOnDesktop()
             ->id('admin')
             ->path('/')
+            ->profile(CustomEditProfile::class)
             ->login()
             ->colors([
                 'primary' => Color::Red,
@@ -80,6 +84,6 @@ class AdminPanelProvider extends PanelProvider
             ->plugins([
                         ReportsPlugin::make(),
                         // \Phpsa\FilamentAuthentication\FilamentAuthentication::make(),
-                    ]);
+            ]);
     }
 }
