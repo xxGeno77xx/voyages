@@ -13,6 +13,7 @@ use Filament\Support\Colors\Color;
 use Filament\View\PanelsRenderHook;
 use EightyNine\Reports\ReportsPlugin;
 use Illuminate\Support\Facades\Blade;
+use App\Filament\Resources\UsernameLogin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Support\Facades\FilamentView;
 use App\Filament\Resources\CustomEditProfile;
@@ -53,7 +54,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('/')
             ->profile(CustomEditProfile::class)
-            ->login()
+            ->login(UsernameLogin::class)
             ->colors([
                 'primary' => Color::Red,
             ])
