@@ -1,6 +1,6 @@
 <?php
 
-namespace Filament\Pages\Auth;
+namespace  App\Filament\Resources;
 
 use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
 use DanHarrin\LivewireRateLimiting\WithRateLimiting;
@@ -24,7 +24,7 @@ use Illuminate\Validation\ValidationException;
 /**
  * @property Form $form
  */
-class Login extends SimplePage
+class UsernameLogin extends SimplePage
 {
     use InteractsWithFormActions;
     use WithRateLimiting;

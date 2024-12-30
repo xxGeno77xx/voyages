@@ -513,10 +513,17 @@ class VoyageResource extends Resource
                     ->label(__("Dépenses"))
                     ->numeric(0, null, '.'),
 
+                    TextColumn::make("commission_fees")
+                        ->placeholder("-")
+                        ->label("Frais de commission")
+                        ->numeric(0, null, '.'),
+
                 TextColumn::make("rentabilité")
                     ->placeholder("0")
                     ->numeric(0, null, '.')
                     ->state(function ($record) {
+
+                        // $CommissionFees = $record; dd($CommissionFees);
 
                         $total = DB::table('bills')->selectRaw('sum(total) as total')
                             ->whereRaw('voyage_id = ?', [$record->id])
@@ -526,7 +533,7 @@ class VoyageResource extends Resource
                             ->whereRaw('voyage_id = ?', [$record->id])
                             ->value("amount");
 
-                        return $total - $depenes;
+                        return intval($total) - (intval($depenes));
                     })
                     ->badge()
                     ->Color(fn($state) => $state >= 0 ? Color::Green : Color::Red),
@@ -585,7 +592,7 @@ class VoyageResource extends Resource
 
         // Update the state with the new values
 
-        $set('objects_total', $total /*+ $get("commission_fees")*/);
+        $set('objects_total', intval($total) /*+ $get("commission_fees")*/);
 
 
 
@@ -631,7 +638,7 @@ class VoyageResource extends Resource
 
     public static function billTotal($get, $set)
     {
-        $set("remaining_amount", ($get("total") ?? 0) + ($get("objects_total") ?? 0) - ($get("paid_amount") ?? 0));
+        $set("remaining_amount", intval($get("total") ?? 0) + intval($get("objects_total") ?? 0) - intval($get("paid_amount") ?? 0));
 
     }
     public static function dateRetourFilter()
