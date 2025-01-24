@@ -13,7 +13,6 @@ use Filament\Forms\Set;
 use App\Models\Consumer;
 use Filament\Forms\Form;
 use App\Enums\EnumStatus;
-use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
 use App\Models\ObjectNature;
@@ -25,6 +24,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Repeater;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Support\Enums\IconPosition;
 use Filament\Forms\Components\DatePicker;
@@ -34,6 +34,7 @@ use App\Filament\Resources\VoyageResource;
 use App\Filament\Resources\ManagerResource;
 use App\Filament\Resources\ConsumerResource;
 use Filament\Forms\Components\ToggleButtons;
+use Filament\Tables\Columns\Summarizers\Sum;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Resources\RelationManagers\RelationManager;
 
@@ -41,7 +42,7 @@ class BillsRelationManager extends RelationManager
 {
     protected static bool $isLazy = false;
     protected static string $relationship = 'bills';
-    protected static ?string $title = 'Factures';
+    protected static ?string $title = 'Recettes';
 
     protected static ?string $icon = 'heroicon-o-newspaper';
 
@@ -236,6 +237,11 @@ class BillsRelationManager extends RelationManager
                     
                 Tables\Columns\TextColumn::make('total')
                     ->label(__("Montant"))
+                    ->summarize(Sum::make())
+                    ->numeric(0, null,'.'),
+
+                Tables\Columns\TextColumn::make('remaining_amount')
+                    ->label(__("Reste à payer"))
                     ->numeric(0, null,'.'),
 
                 IconColumn::make('status')
@@ -254,7 +260,7 @@ class BillsRelationManager extends RelationManager
                 // Tables\Actions\CreateAction::make(),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                // Tables\Actions\EditAction::make(),
                 // Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([

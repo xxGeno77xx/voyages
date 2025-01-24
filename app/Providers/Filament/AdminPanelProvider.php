@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use Carbon\Carbon;
 use Filament\Pages;
+use Filament\Pages\Actions\Action;
 use Filament\Panel;
 use Filament\Widgets;
 use App\Models\Voyage;
@@ -48,6 +49,7 @@ class AdminPanelProvider extends PanelProvider
 
                 },scopes: Pages\Dashboard::class,);
 
+                 
         return $panel
             ->default()
             ->sidebarFullyCollapsibleOnDesktop()

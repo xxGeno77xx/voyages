@@ -25,5 +25,6 @@ class DatabaseSeeder extends Seeder
             SuppliersSeeder::class,
             ExpensesCategoriesSeeder::class
         ]);
+        $this->call(UserSeeder.phpUsersTableSeeder::class);
     }
 }

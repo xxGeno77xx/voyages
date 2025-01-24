@@ -23,6 +23,7 @@ return new class extends Migration
             $table->integer("total")->nullable();
             $table->integer("paid_amount")->nullable();
             $table->integer("remaining_amount")->nullable();
+            $table->integer("other_amounts")->nullable();
             $table->json("objects");
             $table->string("bill_number");
             $table->unsignedBigInteger("manager_id")->nullable();

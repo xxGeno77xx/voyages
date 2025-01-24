@@ -18,9 +18,9 @@ return new class extends Migration
             $table->string("line");
             $table->unsignedBigInteger("expense_category_id")->constrained("expenses_categories");
             $table->unsignedBigInteger("supplier_id")->constrained("suppliers");
-            $table->string("description");
+            $table->string("description")->nullable();
             $table->integer("amount");
-            $table->string("justification");
+            $table->string("justification")->nullable();
             $table->timestamps();
         });
     }

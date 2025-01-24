@@ -98,7 +98,8 @@ class VoyageResource extends Resource
                                                 ->getSearchResultsUsing(fn(string $search): array => Vehicle::where('plate_number', 'like', "%{$search}%")->limit(50)->pluck('plate_number', 'id')->toArray())
                                                 ->getOptionLabelUsing(fn($value): ?string => Vehicle::find($value)?->plate_number)
                                                 ->required()
-                                                ->preload(fn() => Vehicle::pluck("plate_number", "id"))
+                                                ->options(Vehicle::pluck('plate_number', 'id'))
+                                                ->preload(true)
                                                 ->createOptionForm(fn(Form $form) => VehicleResource::form($form))
                                                 ->createOptionUsing(function (array $data): int {
                                                     return Vehicle::create($data)->getKey();
@@ -207,12 +208,12 @@ class VoyageResource extends Resource
 
                             Wizard\Step::make('Billing')
 
-                                ->label(__("Factures"))
+                                ->label(__("Recettes"))
                                 ->schema([
 
 
                                     Repeater::make("bills")
-                                        ->label(__("Factures"))
+                                        ->label(__("Recettes"))
                                         ->defaultItems(0)
                                         ->relationship("bills")
                                         ->addActionLabel(__("Ajouter une facture"))
@@ -368,13 +369,23 @@ class VoyageResource extends Resource
 
                                             Grid::make(3)
                                                 ->schema([
-                                                    TextInput::make("total")
+                                                    TextInput::make("other_amount")
                                                         ->label(__("Autres montants"))
-                                                        ->required()
                                                         ->default(0)
                                                         ->integer()
                                                         ->live(debounce: 2000)
-                                                        ->afterStateUpdated(fn($get, $set) => self::billTotal($get, $set)),
+                                                        ->afterStateUpdated(function($get, $set) {
+
+                                                             $set("remaining_amount", 0);
+
+                                                             if($get("remaining_amount") == 0)
+                                                             {
+                                                                self::billTotal($get, $set);
+                                                             }
+                                                            
+                                                        } ),
+
+                                                    
 
                                                     TextInput::make("paid_amount")
                                                         ->label(__("Montant payé"))
@@ -389,6 +400,16 @@ class VoyageResource extends Resource
                                                         ->required()
                                                         ->integer(),
                                                 ]),
+
+                                                TextInput::make("total")
+                                                        ->label(__("Montant total"))
+                                                        ->required()
+                                                        ->readOnly()
+                                                        ->columnSpanFull()
+                                                        ->default(0)
+                                                        ->integer()
+                                                        ->live(debounce: 2000)
+                                                        ->afterStateUpdated(fn($get, $set) => self::billTotal($get, $set)),
 
                                             TextInput::make("observations")
                                                 ->label(__("Observations")),
@@ -456,17 +477,18 @@ class VoyageResource extends Resource
                                                         ->label(__("Fournisseur"))
                                                         ->native(false)
                                                         ->preload()
-                                                        ->options(Supplier::pluck("raison_sociale", "id")),
+                                                        ->options(Supplier::pluck("raison_sociale", "id"))
+                                                        ->createOptionForm(fn(Form $form) => SupplierResource::form($form))
+                                                        ->createOptionUsing(fn(array $data) => Supplier::create($data)->getKey()),
 
                                                     TextInput::make("amount")
                                                         ->label(__("Montant"))
                                                         ->numeric()
                                                         ->required(),
 
-                                                    TextInput::make("description")
-                                                        ->required(),
-                                                    TextInput::make("justification")
-                                                        ->required(),
+                                                    TextInput::make("description"),
+                                                    
+                                                    TextInput::make("justification"),
                                                 ]),
 
                                         ])
@@ -504,17 +526,22 @@ class VoyageResource extends Resource
                     ->formatStateUsing(fn($state) => Routing::find($state)->label),
 
                 TextColumn::make("total")
+                ->label('Total (Recette)')
                     ->placeholder("-")
                     ->summarize(Sum::make())
+                    ->badge()
+                    ->color("success")
                     ->numeric(0, null, '.'),
 
                 TextColumn::make("depenses")
                     ->placeholder("-")
                     ->label(__("Dépenses"))
+                    ->color('danger')
                     ->numeric(0, null, '.'),
 
                     TextColumn::make("commission_fees")
                         ->placeholder("-")
+                        ->color('danger')
                         ->label("Frais de commission")
                         ->numeric(0, null, '.'),
 
@@ -533,7 +560,11 @@ class VoyageResource extends Resource
                             ->whereRaw('voyage_id = ?', [$record->id])
                             ->value("amount");
 
-                        return intval($total) - (intval($depenes));
+                        $fraisDeCommission = DB::table('bills')->selectRaw('sum(commission_fees) as commission_fees')
+                            ->whereRaw('voyage_id = ?', [$record->id])
+                            ->value("commission_fees");
+
+                        return intval($total) - (intval($depenes) + intval($fraisDeCommission));
                     })
                     ->badge()
                     ->Color(fn($state) => $state >= 0 ? Color::Green : Color::Red),
@@ -557,7 +588,8 @@ class VoyageResource extends Resource
                 $query->select(
                     'voyages.*',
                     DB::raw('(SELECT SUM(bills.total) FROM bills WHERE bills.voyage_id = voyages.id) as total'),
-                    DB::raw('(SELECT SUM(expenses.amount) FROM expenses WHERE expenses.voyage_id = voyages.id) as depenses')
+                    DB::raw('(SELECT SUM(expenses.amount) FROM expenses WHERE expenses.voyage_id = voyages.id) as depenses'),
+                    DB::raw('(SELECT SUM(bills.commission_fees) FROM bills WHERE bills.voyage_id = voyages.id) as commission_fees'),
                 );
             })
             ->deferFilters();
@@ -638,7 +670,10 @@ class VoyageResource extends Resource
 
     public static function billTotal($get, $set)
     {
-        $set("remaining_amount", intval($get("total") ?? 0) + intval($get("objects_total") ?? 0) - intval($get("paid_amount") ?? 0));
+
+        $set("remaining_amount", intval($get("other_amount") ?? 0) + intval($get("objects_total") ?? 0)  - intval($get("paid_amount") ?? 0));
+
+        $set("total",  intval($get("objects_total") ?? 0) + intval($get("other_amount") ?? 0) );
 
     }
     public static function dateRetourFilter()

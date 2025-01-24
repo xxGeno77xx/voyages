@@ -13,6 +13,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Tables\Columns\Summarizers\Sum;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Resources\RelationManagers\RelationManager;
 
@@ -75,6 +76,7 @@ class ExpensesRelationManager extends RelationManager
 
                 Tables\Columns\TextColumn::make('amount')
                 ->label(__("Montant"))
+                ->summarize(Sum::make())
                 ->numeric(0,null, '.'),
 
                 Tables\Columns\TextColumn::make('supplier_id')
